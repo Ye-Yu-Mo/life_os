@@ -1,6 +1,7 @@
 use super::create::CreateAccountView;
 use super::model::Account;
 use super::service::AccountService;
+use crate::components::confirm_dialog::{CancelEvent, ConfirmDialog, ConfirmEvent};
 use gpui::prelude::*;
 use gpui::*;
 use gpui_component::{button::Button, gray, StyledExt};
@@ -13,6 +14,8 @@ pub struct AccountsView {
     error: Option<String>,
     create_view: Option<Entity<CreateAccountView>>,
     show_create: bool,
+    show_confirm_dialog: bool,
+    account_to_delete: Option<String>,
 }
 
 impl AccountsView {
@@ -24,6 +27,8 @@ impl AccountsView {
             error: None,
             create_view: None,
             show_create: false,
+            show_confirm_dialog: false,
+            account_to_delete: None,
         };
         cx.spawn(async move |this, mut cx| {
              this.update(cx, |this, cx| this.fetch_accounts(cx)).ok();
@@ -59,27 +64,42 @@ impl AccountsView {
         cx.notify();
     }
 
-    fn delete_account(&mut self, id: String, cx: &mut Context<Self>) {
-        self.loading = true;
+    fn delete_account_prompt(&mut self, account_id: String, cx: &mut Context<Self>) {
+        self.show_confirm_dialog = true;
+        self.account_to_delete = Some(account_id);
         cx.notify();
-        
-        let service = self.service.clone();
-        cx.spawn(async move |this, mut cx| {
-            let result = service.delete_account(&id).await;
+    }
+
+    fn confirm_delete_account(&mut self, cx: &mut Context<Self>) {
+        if let Some(id) = self.account_to_delete.take() {
+            self.show_confirm_dialog = false;
+            self.loading = true;
+            cx.notify();
             
-            this.update(cx, |this, cx| {
-                this.loading = false;
-                match result {
-                    Ok(_) => {
-                        this.fetch_accounts(cx);
+            let service = self.service.clone();
+            cx.spawn(async move |this, mut cx| {
+                let result = service.delete_account(&id).await;
+                
+                this.update(cx, |this, cx| {
+                    this.loading = false;
+                    match result {
+                        Ok(_) => {
+                            this.fetch_accounts(cx);
+                        }
+                        Err(e) => {
+                            this.error = Some(e.to_string());
+                            cx.notify();
+                        }
                     }
-                    Err(e) => {
-                        this.error = Some(e.to_string());
-                        cx.notify();
-                    }
-                }
-            }).ok();
-        }).detach();
+                }).ok();
+            }).detach();
+        }
+    }
+
+    fn cancel_delete_account(&mut self, cx: &mut Context<Self>) {
+        self.show_confirm_dialog = false;
+        self.account_to_delete = None;
+        cx.notify();
     }
 }
 
@@ -103,7 +123,7 @@ impl Render for AccountsView {
             self.create_view = Some(view);
         }
 
-        div()
+        let main_content = div()
             .v_flex()
             .gap_4()
             .child(
@@ -154,11 +174,27 @@ impl Render for AccountsView {
                                     .child(
                                         Button::new("delete")
                                             .label("Delete")
-                                            .on_click(cx.listener(move |this, _, _, cx| this.delete_account(account_id.clone(), cx)))
+                                            .on_click(cx.listener(move |this, _, _, cx| this.delete_account_prompt(account_id.clone(), cx)))
                                     )
                             })
                         )
                 }
-            )
+            );
+        
+        if self.show_confirm_dialog {
+            let dialog = cx.new(|cx| {
+                ConfirmDialog::new("Are you sure you want to delete this account?".to_string(), cx)
+            });
+            cx.subscribe(&dialog, |this, _, _: &ConfirmEvent, cx| {
+                this.confirm_delete_account(cx);
+            }).detach();
+            cx.subscribe(&dialog, |this, _, _: &CancelEvent, cx| {
+                this.cancel_delete_account(cx);
+            }).detach();
+
+            div().size_full().child(main_content).child(dialog)
+        } else {
+            main_content
+        }
     }
 }

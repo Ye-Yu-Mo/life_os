@@ -14,6 +14,7 @@ pub struct Model {
     #[sea_orm(column_type = "Decimal(Some((19, 4)))")]
     pub balance: Decimal,
     pub currency_code: String,
+    pub deleted_at: Option<DateTimeWithTimeZone>,
     pub created_at: DateTimeWithTimeZone,
     pub updated_at: DateTimeWithTimeZone,
 }

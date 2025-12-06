@@ -89,6 +89,10 @@ async fn load_owned_account(
         return Err(ServiceError::Forbidden);
     }
 
+    if account.deleted_at.is_some() {
+        return Err(ServiceError::NotFound);
+    }
+
     Ok(account)
 }
 
@@ -120,6 +124,7 @@ pub async fn create_account(
         currency_code: Set(currency),
         created_at: Set(now),
         updated_at: Set(now),
+        deleted_at: Set(None),
     };
 
     let model = account.insert(db).await?;
@@ -141,6 +146,7 @@ pub async fn list_accounts(
 ) -> Result<Vec<AccountResponse>, ServiceError> {
     let accounts = Account::find()
         .filter(account::Column::UserId.eq(user_id))
+        .filter(account::Column::DeletedAt.is_null())
         .all(db)
         .await?;
 
@@ -193,34 +199,10 @@ pub async fn delete_account(
 ) -> Result<(), ServiceError> {
     let account = load_owned_account(db, user_id, account_id).await?;
 
-    let txn_count = Transaction::find()
-        .filter(
-            Condition::any()
-                .add(transaction::Column::FromAccountId.eq(account_id))
-                .add(transaction::Column::ToAccountId.eq(account_id))
-        )
-        .count(db)
-        .await?;
-
-    if txn_count > 0 {
-        return Err(ServiceError::Conflict(
-            "Cannot delete account with existing transactions".to_string()
-        ));
-    }
-
-    let holdings_count = Holdings::find()
-        .filter(holdings::Column::AccountId.eq(account_id))
-        .count(db)
-        .await?;
-
-    if holdings_count > 0 {
-        return Err(ServiceError::Conflict(
-            "Cannot delete account with existing holdings".to_string()
-        ));
-    }
-
-    let active: account::ActiveModel = account.into();
-    active.delete(db).await?;
+    // Soft delete
+    let mut active: account::ActiveModel = account.into();
+    active.deleted_at = Set(Some(Utc::now().into()));
+    active.update(db).await?;
 
     Ok(())
 }

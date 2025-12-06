@@ -1,6 +1,7 @@
 mod accounts;
 mod app_root;
 mod auth;
+mod components;
 mod state;
 mod surf_client;
 mod workspace;
