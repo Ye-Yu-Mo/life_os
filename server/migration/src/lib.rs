@@ -4,6 +4,7 @@ mod m20220101_000001_create_table;
 mod m20241206_000001_create_account;
 mod m20241206_000002_create_transaction;
 mod m20241206_000003_create_holdings;
+mod m20251206_070442_add_balance_to_account;
 
 pub struct Migrator;
 
@@ -15,6 +16,7 @@ impl MigratorTrait for Migrator {
             Box::new(m20241206_000001_create_account::Migration),
             Box::new(m20241206_000002_create_transaction::Migration),
             Box::new(m20241206_000003_create_holdings::Migration),
+            Box::new(m20251206_070442_add_balance_to_account::Migration),
         ]
     }
 }

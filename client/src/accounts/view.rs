@@ -58,6 +58,29 @@ impl AccountsView {
         }
         cx.notify();
     }
+
+    fn delete_account(&mut self, id: String, cx: &mut Context<Self>) {
+        self.loading = true;
+        cx.notify();
+        
+        let service = self.service.clone();
+        cx.spawn(async move |this, mut cx| {
+            let result = service.delete_account(&id).await;
+            
+            this.update(cx, |this, cx| {
+                this.loading = false;
+                match result {
+                    Ok(_) => {
+                        this.fetch_accounts(cx);
+                    }
+                    Err(e) => {
+                        this.error = Some(e.to_string());
+                        cx.notify();
+                    }
+                }
+            }).ok();
+        }).detach();
+    }
 }
 
 pub struct CreateAccountSuccess;
@@ -113,12 +136,26 @@ impl Render for AccountsView {
                         .gap_2()
                         .children(
                             self.accounts.iter().map(|account| {
+                                let account_id = account.id.clone();
                                 div()
                                     .p_4()
                                     .border_1()
                                     .border_color(gray(300))
                                     .rounded_md()
-                                    .child(format!("{} ({}) - {}", account.name, account.currency_code, account.r#type))
+                                    .flex()
+                                    .justify_between()
+                                    .items_center()
+                                    .child(
+                                        div()
+                                            .v_flex()
+                                            .child(format!("{} ({}) - {}", account.name, account.currency_code, account.r#type))
+                                            .child(div().text_sm().text_color(gray(500)).child(format!("Balance: {}", account.balance)))
+                                    )
+                                    .child(
+                                        Button::new("delete")
+                                            .label("Delete")
+                                            .on_click(cx.listener(move |this, _, _, cx| this.delete_account(account_id.clone(), cx)))
+                                    )
                             })
                         )
                 }

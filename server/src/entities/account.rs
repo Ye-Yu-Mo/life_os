@@ -11,6 +11,8 @@ pub struct Model {
     pub user_id: Uuid,
     pub name: String,
     pub r#type: String,
+    #[sea_orm(column_type = "Decimal(Some((19, 4)))")]
+    pub balance: Decimal,
     pub currency_code: String,
     pub created_at: DateTimeWithTimeZone,
     pub updated_at: DateTimeWithTimeZone,

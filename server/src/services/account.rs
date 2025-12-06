@@ -2,6 +2,7 @@ use chrono::{DateTime, Utc};
 use sea_orm::{ActiveModelTrait, ColumnTrait, Condition, DatabaseConnection, EntityTrait, PaginatorTrait, QueryFilter, Set};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
+use rust_decimal::Decimal;
 
 use crate::entities::{account, holdings, prelude::*, transaction};
 use crate::errors::ServiceError;
@@ -11,6 +12,7 @@ pub struct CreateAccountRequest {
     pub name: String,
     pub r#type: String,
     pub currency_code: String,
+    pub initial_balance: Option<Decimal>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -25,6 +27,7 @@ pub struct AccountResponse {
     pub id: Uuid,
     pub name: String,
     pub r#type: String,
+    pub balance: Decimal,
     pub currency_code: String,
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
@@ -36,6 +39,7 @@ impl From<account::Model> for AccountResponse {
             id: model.id,
             name: model.name,
             r#type: model.r#type,
+            balance: model.balance,
             currency_code: model.currency_code,
             created_at: model.created_at.with_timezone(&Utc),
             updated_at: model.updated_at.with_timezone(&Utc),
@@ -104,12 +108,15 @@ pub async fn create_account(
     let currency = req.currency_code.trim().to_uppercase();
     validate_currency_code(&currency)?;
 
+    let initial_balance = req.initial_balance.unwrap_or(Decimal::ZERO);
+
     let now = Utc::now().into();
     let account = account::ActiveModel {
         id: Set(Uuid::new_v4()),
         user_id: Set(user_id),
         name: Set(name.to_string()),
         r#type: Set(account_type),
+        balance: Set(initial_balance),
         currency_code: Set(currency),
         created_at: Set(now),
         updated_at: Set(now),
@@ -217,4 +224,3 @@ pub async fn delete_account(
 
     Ok(())
 }
-

@@ -9,6 +9,7 @@ pub struct CreateAccountView {
     service: Arc<AccountService>,
     name_input: Entity<InputState>,
     type_input: Entity<InputState>,
+    balance_input: Entity<InputState>,
     currency_input: Entity<InputState>,
     in_flight: bool,
     error: Option<String>,
@@ -23,12 +24,14 @@ impl CreateAccountView {
     ) -> Self {
         let name_input = cx.new(|cx| InputState::new(window, cx).placeholder("Account Name"));
         let type_input = cx.new(|cx| InputState::new(window, cx).placeholder("Type (e.g., bank_card)"));
+        let balance_input = cx.new(|cx| InputState::new(window, cx).placeholder("Initial Balance (e.g., 0.00)"));
         let currency_input = cx.new(|cx| InputState::new(window, cx).placeholder("Currency (e.g., USD)"));
 
         Self {
             service,
             name_input,
             type_input,
+            balance_input,
             currency_input,
             in_flight: false,
             error: None,
@@ -47,10 +50,11 @@ impl CreateAccountView {
     fn submit(&mut self, cx: &mut Context<Self>) {
         let name = self.name_input.read(cx).value();
         let r#type = self.type_input.read(cx).value();
+        let balance_str = self.balance_input.read(cx).value();
         let currency = self.currency_input.read(cx).value();
 
         if name.is_empty() || r#type.is_empty() || currency.is_empty() {
-            self.error = Some("All fields are required".to_string());
+            self.error = Some("Name, Type and Currency are required".to_string());
             cx.notify();
             return;
         }
@@ -63,6 +67,7 @@ impl CreateAccountView {
             name: name.to_string(),
             r#type: r#type.to_string(),
             currency_code: currency.to_string(),
+            initial_balance: if balance_str.is_empty() { None } else { Some(balance_str.to_string()) },
         };
 
         let service = self.service.clone();
@@ -112,6 +117,11 @@ impl Render for CreateAccountView {
                         field()
                             .label("Type")
                             .child(Input::new(&self.type_input)),
+                    )
+                    .child(
+                        field()
+                            .label("Initial Balance")
+                            .child(Input::new(&self.balance_input)),
                     )
                     .child(
                         field()
