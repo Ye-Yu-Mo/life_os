@@ -1,12 +1,4 @@
-mod config;
-mod db;
-mod entities;
-mod errors;
-mod handlers;
-mod routes;
-mod services;
-mod state;
-
+use server::{config, db, routes, services, state};
 use services::notify::{EmailNotifier, FeishuNotifier, MultiNotifier, NoopNotifier, Notifier};
 use state::AppState;
 use std::sync::Arc;

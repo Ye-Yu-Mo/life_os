@@ -37,3 +37,38 @@ impl IntoResponse for AuthError {
         (status, Json(json!({ "error": message }))).into_response()
     }
 }
+
+#[derive(Debug, Error)]
+pub enum ServiceError {
+    #[error("Database error: {0}")]
+    Database(#[from] sea_orm::DbErr),
+
+    #[error("Resource not found")]
+    NotFound,
+
+    #[error("Access forbidden")]
+    Forbidden,
+
+    #[error("Validation error: {0}")]
+    Validation(String),
+
+    #[error("Conflict: {0}")]
+    Conflict(String),
+}
+
+impl IntoResponse for ServiceError {
+    fn into_response(self) -> Response {
+        let (status, message) = match &self {
+            ServiceError::NotFound => (StatusCode::NOT_FOUND, "Resource not found".to_string()),
+            ServiceError::Forbidden => (StatusCode::FORBIDDEN, "Access forbidden".to_string()),
+            ServiceError::Validation(msg) => (StatusCode::BAD_REQUEST, msg.clone()),
+            ServiceError::Conflict(msg) => (StatusCode::CONFLICT, msg.clone()),
+            ServiceError::Database(_) => (StatusCode::INTERNAL_SERVER_ERROR, "Internal server error".to_string()),
+        };
+
+        error!(error = %self, status = %status, "request failed");
+
+        (status, Json(json!({ "error": message }))).into_response()
+    }
+}
+

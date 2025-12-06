@@ -4,29 +4,30 @@ use sea_orm::entity::prelude::*;
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, PartialEq, DeriveEntityModel, Eq, Serialize, Deserialize)]
-#[sea_orm(table_name = "user")]
+#[sea_orm(table_name = "account")]
 pub struct Model {
     #[sea_orm(primary_key, auto_increment = false)]
     pub id: Uuid,
-    pub username: String,
-    pub password_hash: String,
+    pub user_id: Uuid,
+    pub name: String,
+    pub r#type: String,
+    pub currency_code: String,
     pub created_at: DateTimeWithTimeZone,
+    pub updated_at: DateTimeWithTimeZone,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
 pub enum Relation {
-    #[sea_orm(has_many = "super::account::Entity")]
-    Account,
     #[sea_orm(has_many = "super::holdings::Entity")]
     Holdings,
-    #[sea_orm(has_many = "super::transaction::Entity")]
-    Transaction,
-}
-
-impl Related<super::account::Entity> for Entity {
-    fn to() -> RelationDef {
-        Relation::Account.def()
-    }
+    #[sea_orm(
+        belongs_to = "super::user::Entity",
+        from = "Column::UserId",
+        to = "super::user::Column::Id",
+        on_update = "Cascade",
+        on_delete = "Cascade"
+    )]
+    User,
 }
 
 impl Related<super::holdings::Entity> for Entity {
@@ -35,9 +36,9 @@ impl Related<super::holdings::Entity> for Entity {
     }
 }
 
-impl Related<super::transaction::Entity> for Entity {
+impl Related<super::user::Entity> for Entity {
     fn to() -> RelationDef {
-        Relation::Transaction.def()
+        Relation::User.def()
     }
 }
 
