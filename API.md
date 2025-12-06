@@ -1,164 +1,191 @@
 # Life OS - API Documentation
 
+## Authentication
+
+All protected endpoints require a JSON Web Token (JWT) in the `Authorization` header.
+
+**Header Format:**
+```
+Authorization: Bearer <your_token>
+```
+
 ## Base URL
 ```
 http://127.0.0.1:3000
 ```
 
-## Endpoints
+---
 
-### 1. User Registration
+## Auth Endpoints
+
+### 1. Register
 
 Register a new user account.
 
 **Endpoint:** `POST /register`
 
-**Request Headers:**
-```
-Content-Type: application/json
-```
-
 **Request Body:**
 ```json
 {
-  "username": "string",
-  "password": "string"
+  "username": "alice",
+  "password": "secret123"
 }
 ```
 
 **Success Response:**
-- **Status Code:** `200 OK`
-- **Body:**
 ```json
 {
   "id": "uuid",
-  "username": "string"
+  "username": "alice",
+  "token": "eyJhbGciOiJIUzI1Ni..."
 }
 ```
 
-**Error Responses:**
+### 2. Login
 
-| Status Code | Description | Response Body |
-|-------------|-------------|---------------|
-| 400 Bad Request | Registration failed (username already exists) | `{"error": "Registration failed"}` |
-| 500 Internal Server Error | Server error | `{"error": "Internal server error"}` |
-
-**Example:**
-```bash
-curl -X POST http://127.0.0.1:3000/register \
-  -H "Content-Type: application/json" \
-  -d '{"username":"alice","password":"secret123"}'
-```
-
-**Notes:**
-- Usernames are case-insensitive (automatically converted to lowercase)
-- Username whitespace is trimmed
-- Password is hashed using Argon2 before storage
-
----
-
-### 2. User Login
-
-Authenticate a user and retrieve their information.
+Authenticate and receive an access token.
 
 **Endpoint:** `POST /login`
 
-**Request Headers:**
-```
-Content-Type: application/json
-```
-
 **Request Body:**
 ```json
 {
-  "username": "string",
-  "password": "string"
+  "username": "alice",
+  "password": "secret123"
 }
 ```
 
 **Success Response:**
-- **Status Code:** `200 OK`
-- **Body:**
 ```json
 {
   "id": "uuid",
-  "username": "string"
+  "username": "alice",
+  "token": "eyJhbGciOiJIUzI1Ni..."
 }
 ```
 
-**Error Responses:**
-
-| Status Code | Description | Response Body |
-|-------------|-------------|---------------|
-| 401 Unauthorized | Authentication failed (invalid username or password) | `{"error": "Authentication failed"}` |
-| 500 Internal Server Error | Server error | `{"error": "Internal server error"}` |
-
-**Example:**
-```bash
-curl -X POST http://127.0.0.1:3000/login \
-  -H "Content-Type: application/json" \
-  -d '{"username":"alice","password":"secret123"}'
-```
-
-**Notes:**
-- Username lookup is case-insensitive
-- Failed login does not distinguish between "user not found" and "wrong password" to prevent user enumeration attacks
-
 ---
 
-## Security Considerations
+## Account Endpoints
 
-1. **Password Hashing**: All passwords are hashed using Argon2 with random salts
-2. **Case-Insensitive Usernames**: Stored as lowercase with unique constraint on `LOWER(username)`
-3. **No User Enumeration**: Registration and login errors are intentionally vague
-4. **Database Constraints**: Unique username constraint enforced at database level
+### 1. Create Account
 
----
+**Endpoint:** `POST /accounts`
 
-## Error Response Format
-
-All error responses follow this format:
+**Request Body:**
 ```json
 {
-  "error": "error message"
+  "name": "My Bank Card",
+  "type": "bank_card",
+  "currency_code": "USD"
 }
 ```
 
+**Response:**
+```json
+{
+  "id": "uuid",
+  "name": "My Bank Card",
+  "type": "bank_card",
+  "currency_code": "USD",
+  "created_at": "2023-10-27T10:00:00Z",
+  "updated_at": "2023-10-27T10:00:00Z"
+}
+```
+
+### 2. List Accounts
+
+**Endpoint:** `GET /accounts`
+
+**Response:**
+```json
+[
+  {
+    "id": "uuid",
+    "name": "My Bank Card",
+    "type": "bank_card",
+    "currency_code": "USD",
+    ...
+  }
+]
+```
+
+### 3. Get Account
+
+**Endpoint:** `GET /accounts/:account_id`
+
+### 4. Update Account
+
+**Endpoint:** `PUT /accounts/:account_id`
+
+**Request Body:**
+```json
+{
+  "name": "Updated Name",
+  "type": "cash", 
+  "currency_code": "EUR"
+}
+```
+(All fields are optional)
+
+### 5. Delete Account
+
+**Endpoint:** `DELETE /accounts/:account_id`
+
 ---
 
-## Database Schema
+## Transaction Endpoints
 
-### User Table
-```sql
-CREATE TABLE "user" (
-    id            UUID PRIMARY KEY,
-    username      VARCHAR(50) NOT NULL,
-    password_hash VARCHAR(256) NOT NULL,
-    created_at    TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
-);
+### 1. Create Transaction
 
-CREATE UNIQUE INDEX idx_user_username_lower ON "user" (LOWER(username));
+**Endpoint:** `POST /transactions`
+
+**Request Body:**
+```json
+{
+  "from_account_id": "uuid", 
+  "to_account_id": "uuid",
+  "amount": "100.00",
+  "currency_code": "USD",
+  "txn_type": "expense", 
+  "category": "Food",
+  "occurred_at": "2023-10-27T10:00:00Z"
+}
 ```
+
+### 2. List Transactions
+
+**Endpoint:** `GET /transactions`
+
+**Query Parameters:**
+- `account_id`: Filter by account (optional)
+- `start_date`: Filter by start date (optional)
+- `end_date`: Filter by end date (optional)
 
 ---
 
-## Development
+## Holdings Endpoints
 
-### Start Server
-```bash
-cd server
-cargo run
+### 1. Create Holding
+
+**Endpoint:** `POST /holdings`
+
+**Request Body:**
+```json
+{
+  "account_id": "uuid",
+  "asset_type": "stock",
+  "symbol": "AAPL",
+  "quantity": "10",
+  "cost_basis_total": "1500.00",
+  "currency_code": "USD"
+}
 ```
 
-Server will start on `http://127.0.0.1:3000`
+### 2. List Holdings
 
-### Environment Variables
-Create a `.env` file in the `server/` directory:
-```
-DATABASE_URL=postgres://localhost/life_os
-```
+**Endpoint:** `GET /holdings`
 
-### Database Migrations
-```bash
-sea-orm-cli migrate up
-```
+**Query Parameters:**
+- `account_id`: Filter by account (optional)
+- `asset_type`: Filter by asset type (optional)

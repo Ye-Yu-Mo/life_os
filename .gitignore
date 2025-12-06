@@ -26,3 +26,4 @@ server/.env
 docs/.DS_Store
 docs/
 .DS_Store
+GEMINI.md

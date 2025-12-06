@@ -5,6 +5,7 @@ use uuid::Uuid;
 use crate::errors::AuthError;
 use crate::services::auth::{self, LoginRequest, RegisterRequest};
 use crate::state::AppState;
+use crate::utils::jwt;
 
 #[derive(Deserialize)]
 pub struct RegisterPayload {
@@ -22,6 +23,7 @@ pub struct LoginPayload {
 pub struct UserResponsePayload {
     pub id: Uuid,
     pub username: String,
+    pub token: String,
 }
 
 pub async fn register_handler(
@@ -37,9 +39,12 @@ pub async fn register_handler(
     )
     .await?;
 
+    let token = jwt::sign(user.id)?;
+
     Ok(Json(UserResponsePayload {
         id: user.id,
         username: user.username,
+        token,
     }))
 }
 
@@ -56,8 +61,11 @@ pub async fn login_handler(
     )
     .await?;
 
+    let token = jwt::sign(user.id)?;
+
     Ok(Json(UserResponsePayload {
         id: user.id,
         username: user.username,
+        token,
     }))
 }

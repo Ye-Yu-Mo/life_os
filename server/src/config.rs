@@ -5,6 +5,13 @@ pub fn get_database_url() -> String {
     env::var("DATABASE_URL").expect("DATABASE_URL must be set")
 }
 
+pub fn get_jwt_secret() -> String {
+    env::var("JWT_SECRET").unwrap_or_else(|_| {
+        warn!("JWT_SECRET not set, using default insecure secret");
+        "insecure_secret_change_me".to_string()
+    })
+}
+
 pub struct NotificationConfig {
     pub feishu_webhook_url: Option<String>,
     pub smtp_config: Option<SmtpConfig>,

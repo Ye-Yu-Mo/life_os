@@ -1,9 +1,11 @@
 mod auth;
+mod state;
 mod surf_client;
 
 use auth::AuthView;
 use gpui::*;
 use gpui_component::*;
+use state::AppState;
 use surf_client::SurfClient;
 use tracing::error;
 use tracing_subscriber::{fmt, layer::SubscriberExt, util::SubscriberInitExt, EnvFilter};
@@ -17,6 +19,9 @@ fn main() {
 
     app.run(move |cx| {
         gpui_component::init(cx);
+        
+        // Initialize Global AppState
+        cx.set_global(AppState::default());
 
         let http_client = cx.http_client();
 

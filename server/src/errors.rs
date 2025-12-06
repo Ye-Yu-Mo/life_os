@@ -20,6 +20,9 @@ pub enum AuthError {
 
     #[error("Password hash error")]
     PasswordHashError,
+
+    #[error("Invalid token")]
+    InvalidToken,
 }
 
 impl IntoResponse for AuthError {
@@ -27,6 +30,7 @@ impl IntoResponse for AuthError {
         let error_msg = self.to_string();
         let (status, message) = match self {
             AuthError::AuthenticationFailed => (StatusCode::UNAUTHORIZED, "Authentication failed"),
+            AuthError::InvalidToken => (StatusCode::UNAUTHORIZED, "Invalid token"),
             AuthError::RegistrationFailed => (StatusCode::BAD_REQUEST, "Registration failed"),
             AuthError::PasswordHashError => (StatusCode::INTERNAL_SERVER_ERROR, "Internal server error"),
             AuthError::Database(_) => (StatusCode::INTERNAL_SERVER_ERROR, "Internal server error"),

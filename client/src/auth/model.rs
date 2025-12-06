@@ -42,10 +42,11 @@ pub struct AuthPayload {
     pub password: String,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Clone)]
 pub struct User {
     pub id: String,
     pub username: String,
+    pub token: Option<String>,
 }
 
 #[derive(Debug, Deserialize)]

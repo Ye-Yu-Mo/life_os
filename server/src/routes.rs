@@ -1,4 +1,5 @@
 use axum::{
+    middleware,
     routing::{delete, get, post, put},
     Router,
 };
@@ -17,27 +18,32 @@ use crate::handlers::transaction::{
     create_transaction_handler, delete_transaction_handler, get_transaction_handler,
     list_transactions_handler, update_transaction_handler,
 };
+use crate::middleware::auth::auth_middleware;
 use crate::state::AppState;
 
 pub fn create_router(state: AppState) -> Router {
+    let api_routes = Router::new()
+        .route("/accounts", post(create_account_handler))
+        .route("/accounts", get(list_accounts_handler))
+        .route("/accounts/{account_id}", get(get_account_handler))
+        .route("/accounts/{account_id}", put(update_account_handler))
+        .route("/accounts/{account_id}", delete(delete_account_handler))
+        .route("/transactions", post(create_transaction_handler))
+        .route("/transactions", get(list_transactions_handler))
+        .route("/transactions/{txn_id}", get(get_transaction_handler))
+        .route("/transactions/{txn_id}", put(update_transaction_handler))
+        .route("/transactions/{txn_id}", delete(delete_transaction_handler))
+        .route("/holdings", post(create_holdings_handler))
+        .route("/holdings", get(list_holdings_handler))
+        .route("/holdings/{holdings_id}", get(get_holdings_handler))
+        .route("/holdings/{holdings_id}", put(update_holdings_handler))
+        .route("/holdings/{holdings_id}", delete(delete_holdings_handler))
+        .layer(middleware::from_fn(auth_middleware));
+
     Router::new()
         .route("/register", post(register_handler))
         .route("/login", post(login_handler))
         .route("/test/notification", post(test_notification_handler))
-        .route("/accounts", post(create_account_handler))
-        .route("/accounts", get(list_accounts_handler))
-        .route("/accounts/:account_id", get(get_account_handler))
-        .route("/accounts/:account_id", put(update_account_handler))
-        .route("/accounts/:account_id", delete(delete_account_handler))
-        .route("/transactions", post(create_transaction_handler))
-        .route("/transactions", get(list_transactions_handler))
-        .route("/transactions/:txn_id", get(get_transaction_handler))
-        .route("/transactions/:txn_id", put(update_transaction_handler))
-        .route("/transactions/:txn_id", delete(delete_transaction_handler))
-        .route("/holdings", post(create_holdings_handler))
-        .route("/holdings", get(list_holdings_handler))
-        .route("/holdings/:holdings_id", get(get_holdings_handler))
-        .route("/holdings/:holdings_id", put(update_holdings_handler))
-        .route("/holdings/:holdings_id", delete(delete_holdings_handler))
+        .merge(api_routes)
         .with_state(state)
 }

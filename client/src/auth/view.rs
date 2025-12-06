@@ -1,5 +1,6 @@
-use super::model::{AuthMode, AuthPayload, User};
+use super::model::{AuthMode, AuthPayload};
 use super::service::AuthService;
+use crate::state::AppState;
 use gpui::prelude::*;
 use gpui::*;
 use gpui_component::{button::*, form::*, input::*, *};
@@ -13,7 +14,6 @@ pub struct AuthView {
     service: Arc<AuthService>,
     in_flight: bool,
     error: Option<String>,
-    user: Option<User>,
 }
 
 impl AuthView {
@@ -43,7 +43,6 @@ impl AuthView {
             service,
             in_flight: false,
             error: None,
-            user: None,
         }
     }
 
@@ -82,8 +81,14 @@ impl AuthView {
                     this.in_flight = false;
                     match result {
                         Ok(user) => {
-                            this.user = Some(user);
-                            this.error = None;
+                            if let Some(token) = user.token.clone() {
+                                cx.update_global::<AppState, _>(|state, _| {
+                                    state.set_auth(user, token);
+                                });
+                                this.error = None;
+                            } else {
+                                this.error = Some("登录成功但未返回 Token".to_string());
+                            }
                         }
                         Err(err) => {
                             this.error = Some(err.to_string());
@@ -100,7 +105,9 @@ impl AuthView {
 
 impl Render for AuthView {
     fn render(&mut self, _window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
-        if let Some(user) = &self.user {
+        let app_state = cx.global::<AppState>();
+        
+        if let Some(user) = &app_state.user {
             return div()
                 .v_flex()
                 .gap_4()
@@ -108,7 +115,16 @@ impl Render for AuthView {
                 .items_center()
                 .justify_center()
                 .child(format!("欢迎, {}!", user.username))
-                .child(format!("用户 ID: {}", user.id));
+                .child(format!("用户 ID: {}", user.id))
+                .child(
+                    Button::new("logout")
+                        .label("退出登录")
+                        .on_click(cx.listener(|_, _, _, cx| {
+                            cx.update_global::<AppState, _>(|state, _| {
+                                state.logout();
+                            });
+                        })),
+                );
         }
 
         div()
