@@ -43,24 +43,29 @@ impl From<account::Model> for AccountResponse {
     }
 }
 
-const VALID_ACCOUNT_TYPES: &[&str] = &[
-    "bank_card", "alipay", "wechat", "cash",
-    "stock", "fund", "crypto", "virtual"
-];
-
 fn validate_account_type(t: &str) -> Result<(), ServiceError> {
-    if !VALID_ACCOUNT_TYPES.contains(&t) {
+    if t.trim().is_empty() {
         return Err(ServiceError::Validation(
-            format!("Invalid account type: {}", t)
+            "Account type cannot be empty".to_string()
         ));
     }
     Ok(())
 }
 
 fn validate_currency_code(code: &str) -> Result<(), ServiceError> {
-    if code.len() != 3 || !code.chars().all(|c| c.is_ascii_alphabetic()) {
+    if code.trim().is_empty() {
         return Err(ServiceError::Validation(
-            "Currency code must be 3 letters".to_string()
+            "Currency code cannot be empty".to_string()
+        ));
+    }
+    if code.len() > 10 {
+        return Err(ServiceError::Validation(
+            "Currency code too long (max 10 chars)".to_string()
+        ));
+    }
+    if !code.chars().all(|c| c.is_ascii_alphanumeric()) {
+        return Err(ServiceError::Validation(
+            "Currency code must be alphanumeric".to_string()
         ));
     }
     Ok(())

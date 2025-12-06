@@ -105,28 +105,6 @@ impl AuthView {
 
 impl Render for AuthView {
     fn render(&mut self, _window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
-        let app_state = cx.global::<AppState>();
-        
-        if let Some(user) = &app_state.user {
-            return div()
-                .v_flex()
-                .gap_4()
-                .size_full()
-                .items_center()
-                .justify_center()
-                .child(format!("欢迎, {}!", user.username))
-                .child(format!("用户 ID: {}", user.id))
-                .child(
-                    Button::new("logout")
-                        .label("退出登录")
-                        .on_click(cx.listener(|_, _, _, cx| {
-                            cx.update_global::<AppState, _>(|state, _| {
-                                state.logout();
-                            });
-                        })),
-                );
-        }
-
         div()
             .v_flex()
             .gap_6()

@@ -1,30 +1,30 @@
-# Life OS - API Documentation
+# Life OS - API 文档
 
-## Authentication
+## 身份验证 (Authentication)
 
-All protected endpoints require a JSON Web Token (JWT) in the `Authorization` header.
+所有受保护的接口都需要在 `Authorization` 请求头中携带 JSON Web Token (JWT)。
 
-**Header Format:**
+**Header 格式:**
 ```
 Authorization: Bearer <your_token>
 ```
 
-## Base URL
+## 基础 URL (Base URL)
 ```
 http://127.0.0.1:3000
 ```
 
 ---
 
-## Auth Endpoints
+## 认证接口 (Auth Endpoints)
 
-### 1. Register
+### 1. 注册 (Register)
 
-Register a new user account.
+注册一个新的用户账号。
 
-**Endpoint:** `POST /register`
+**接口:** `POST /register`
 
-**Request Body:**
+**请求体:**
 ```json
 {
   "username": "alice",
@@ -32,7 +32,7 @@ Register a new user account.
 }
 ```
 
-**Success Response:**
+**成功响应:**
 ```json
 {
   "id": "uuid",
@@ -41,13 +41,13 @@ Register a new user account.
 }
 ```
 
-### 2. Login
+### 2. 登录 (Login)
 
-Authenticate and receive an access token.
+验证用户身份并获取访问令牌 (Token)。
 
-**Endpoint:** `POST /login`
+**接口:** `POST /login`
 
-**Request Body:**
+**请求体:**
 ```json
 {
   "username": "alice",
@@ -55,7 +55,7 @@ Authenticate and receive an access token.
 }
 ```
 
-**Success Response:**
+**成功响应:**
 ```json
 {
   "id": "uuid",
@@ -66,26 +66,26 @@ Authenticate and receive an access token.
 
 ---
 
-## Account Endpoints
+## 账户接口 (Account Endpoints)
 
-### 1. Create Account
+### 1. 创建账户 (Create Account)
 
-**Endpoint:** `POST /accounts`
+**接口:** `POST /accounts`
 
-**Request Body:**
+**请求体:**
 ```json
 {
-  "name": "My Bank Card",
+  "name": "我的银行卡",
   "type": "bank_card",
   "currency_code": "USD"
 }
 ```
 
-**Response:**
+**响应:**
 ```json
 {
   "id": "uuid",
-  "name": "My Bank Card",
+  "name": "我的银行卡",
   "type": "bank_card",
   "currency_code": "USD",
   "created_at": "2023-10-27T10:00:00Z",
@@ -93,16 +93,16 @@ Authenticate and receive an access token.
 }
 ```
 
-### 2. List Accounts
+### 2. 获取账户列表 (List Accounts)
 
-**Endpoint:** `GET /accounts`
+**接口:** `GET /accounts`
 
-**Response:**
+**响应:**
 ```json
 [
   {
     "id": "uuid",
-    "name": "My Bank Card",
+    "name": "我的银行卡",
     "type": "bank_card",
     "currency_code": "USD",
     ...
@@ -110,37 +110,37 @@ Authenticate and receive an access token.
 ]
 ```
 
-### 3. Get Account
+### 3. 获取账户详情 (Get Account)
 
-**Endpoint:** `GET /accounts/:account_id`
+**接口:** `GET /accounts/:account_id`
 
-### 4. Update Account
+### 4. 更新账户 (Update Account)
 
-**Endpoint:** `PUT /accounts/:account_id`
+**接口:** `PUT /accounts/:account_id`
 
-**Request Body:**
+**请求体:**
 ```json
 {
-  "name": "Updated Name",
+  "name": "更新后的名称",
   "type": "cash", 
   "currency_code": "EUR"
 }
 ```
-(All fields are optional)
+(所有字段均为可选)
 
-### 5. Delete Account
+### 5. 删除账户 (Delete Account)
 
-**Endpoint:** `DELETE /accounts/:account_id`
+**接口:** `DELETE /accounts/:account_id`
 
 ---
 
-## Transaction Endpoints
+## 交易/流水接口 (Transaction Endpoints)
 
-### 1. Create Transaction
+### 1. 创建交易 (Create Transaction)
 
-**Endpoint:** `POST /transactions`
+**接口:** `POST /transactions`
 
-**Request Body:**
+**请求体:**
 ```json
 {
   "from_account_id": "uuid", 
@@ -148,29 +148,29 @@ Authenticate and receive an access token.
   "amount": "100.00",
   "currency_code": "USD",
   "txn_type": "expense", 
-  "category": "Food",
+  "category": "餐饮",
   "occurred_at": "2023-10-27T10:00:00Z"
 }
 ```
 
-### 2. List Transactions
+### 2. 获取交易列表 (List Transactions)
 
-**Endpoint:** `GET /transactions`
+**接口:** `GET /transactions`
 
-**Query Parameters:**
-- `account_id`: Filter by account (optional)
-- `start_date`: Filter by start date (optional)
-- `end_date`: Filter by end date (optional)
+**查询参数 (Query Parameters):**
+- `account_id`: 按账户筛选 (可选)
+- `start_date`: 按开始日期筛选 (可选)
+- `end_date`: 按结束日期筛选 (可选)
 
 ---
 
-## Holdings Endpoints
+## 资产/持仓接口 (Holdings Endpoints)
 
-### 1. Create Holding
+### 1. 创建持仓 (Create Holding)
 
-**Endpoint:** `POST /holdings`
+**接口:** `POST /holdings`
 
-**Request Body:**
+**请求体:**
 ```json
 {
   "account_id": "uuid",
@@ -182,10 +182,10 @@ Authenticate and receive an access token.
 }
 ```
 
-### 2. List Holdings
+### 2. 获取持仓列表 (List Holdings)
 
-**Endpoint:** `GET /holdings`
+**接口:** `GET /holdings`
 
-**Query Parameters:**
-- `account_id`: Filter by account (optional)
-- `asset_type`: Filter by asset type (optional)
+**查询参数 (Query Parameters):**
+- `account_id`: 按账户筛选 (可选)
+- `asset_type`: 按资产类型筛选 (可选)

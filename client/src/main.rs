@@ -1,8 +1,11 @@
+mod accounts;
+mod app_root;
 mod auth;
 mod state;
 mod surf_client;
+mod workspace;
 
-use auth::AuthView;
+use app_root::AppRoot;
 use gpui::*;
 use gpui_component::*;
 use state::AppState;
@@ -27,7 +30,7 @@ fn main() {
 
         cx.spawn(async move |cx| {
             cx.open_window(WindowOptions::default(), move |window, cx| {
-                let view = cx.new(|cx| AuthView::new(http_client.clone(), window, cx));
+                let view = cx.new(|cx| AppRoot::new(http_client.clone(), window, cx));
                 cx.new(|cx| Root::new(view, window, cx))
             })
             .map_err(|err| {
