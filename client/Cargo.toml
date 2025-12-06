@@ -18,3 +18,4 @@ futures = "0.3"
 surf = { version = "2.3", default-features = false, features = ["h1-client-rustls"] }
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter", "json"] }
+rfd = "0.16.0"
